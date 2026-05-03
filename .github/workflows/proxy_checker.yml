@@ -1,0 +1,36 @@
+name: Proxy Checker
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+jobs:
+  check-proxies:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install "requests[socks]"
+
+      - name: Run proxy checker
+        run: python main.py
+
+      - name: Commit proxies.txt
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add proxies.txt
+          git diff --staged --quiet || git commit -m "chore: update proxies.txt [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+          git push
